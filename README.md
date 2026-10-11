@@ -53,6 +53,12 @@ rhythm-tap/
 └── README.md
 ```
 
+## LLM Chat History
+
+The ChatGPT conversation documenting the implementation process, debugging, testing, and feature development for Rhythm Tap is available here:
+
+- **ChatGPT conversation:** [View complete chat history](https://chatgpt.com/share/6acbb88c-dbb4-83ee-92ca-6ce48914e042)
+
 ## Submission Checklist
 
 Submission is only the following three things:
