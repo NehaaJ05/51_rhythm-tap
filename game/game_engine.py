@@ -75,8 +75,9 @@ class GameEngine:
         self.combo = 0
         self.max_combo = 0
         self.misses = 0
-        self.spawn_timer = 0
-        self.spawn_interval = 45
+        self.bpm = 120
+        self.beat_interval = 60000 / self.bpm
+        self.last_spawn_time = pygame.time.get_ticks()
         self.speed = 5
         self.frame = 0
         self.feedback = []  # (text, color, ttl, x, y)
@@ -225,14 +226,19 @@ class GameEngine:
             
     def update(self):
         if self.game_over: return
+        
         self.frame += 1
-        self.spawn_timer += 1
-        if self.spawn_timer >= self.spawn_interval:
+
+        now = pygame.time.get_ticks()
+
+        if now - self.last_spawn_time >= self.beat_interval:
             self.spawn_note()
-            self.spawn_timer = 0
-            if self.frame % 600 == 0:
-                self.speed = min(10, self.speed + 0.5)
-                self.spawn_interval = max(25, self.spawn_interval - 2)
+            self.last_spawn_time += self.beat_interval
+
+        # Preserve the existing difficulty progression.
+        if self.frame % 600 == 0:
+            self.speed = min(10, self.speed + 0.5)
+
 
         for note in self.notes:
             note.update()
