@@ -82,6 +82,31 @@ class GameEngine:
         self.frame = 0
         self.feedback = []  # (text, color, ttl, x, y)
         self.game_over = False
+        self.grade_counts = {
+            "PERFECT": 0,
+            "GREAT": 0,
+            "OK": 0,
+            "MISS": 0,
+        }
+
+    def record_grade(self, grade):
+        self.grade_counts[grade] += 1
+
+
+    def get_accuracy(self):
+        counts = self.grade_counts
+        total = sum(counts.values())
+
+        if total == 0:
+            return 0.0
+
+        weighted_points = (
+            counts["PERFECT"] * 300
+            + counts["GREAT"] * 200
+            + counts["OK"] * 100
+        )
+
+        return (weighted_points / (total * 300)) * 100
 
     def spawn_note(self):
         lane = random.randint(0, LANES - 1)
@@ -163,6 +188,7 @@ class GameEngine:
                     grade, pts = "OK", 100
                     col = (180, 180, 255)
 
+                self.record_grade(grade)
                 self.combo += 1
                 self.max_combo = max(self.max_combo, self.combo)
                 self.score += pts * max(1, self.combo // 5)
@@ -171,6 +197,7 @@ class GameEngine:
                     [grade, col, 40, lane_x, HIT_Y - 30]
                 )
         else:
+            self.record_grade("MISS")
             self.combo = 0
             self.feedback.append(
                 ["MISS", (220, 60, 60), 40, lane_x, HIT_Y - 30]
@@ -183,7 +210,7 @@ class GameEngine:
         lane_x = note.lane * LANE_W + LANE_W // 2
         note.holding = False
         note.hit = True
-        
+        self.record_grade(note.hold_grade)
         self.combo += 1
         self.max_combo = max(self.max_combo, self.combo)
         self.score += note.hold_points * max(1, self.combo // 5)
@@ -217,6 +244,7 @@ class GameEngine:
                 note.holding = False
                 note.missed = True
                 self.combo = 0
+                self.record_grade("MISS")
                 self.misses += 1
                 self.feedback.append(
                     ["MISS", (220, 60, 60), 40, lane_x, HIT_Y - 30]
@@ -255,6 +283,7 @@ class GameEngine:
                 and note.y > HIT_Y + HIT_WINDOW + Note.HEIGHT
             ):
                 note.missed = True
+                self.record_grade("MISS")
                 self.misses += 1
                 self.combo = 0
 
@@ -315,24 +344,57 @@ class GameEngine:
             combo_line = score_font.render(
                 f"Max Combo: {self.max_combo}x", True, (200, 200, 200)
             )
-            restart = self.font.render(
-                "Press R to Restart", True, (160, 160, 160)
-            )
 
             self.screen.blit(
-                msg, (WIDTH // 2 - msg.get_width() // 2, HEIGHT // 2 - 100)
+                msg, (WIDTH // 2 - msg.get_width() // 2, 150)
             )
             self.screen.blit(
                 score_line,
-                (WIDTH // 2 - score_line.get_width() // 2, HEIGHT // 2 - 25),
+                (WIDTH // 2 - score_line.get_width() // 2, 215),
             )
             self.screen.blit(
                 combo_line,
-                (WIDTH // 2 - combo_line.get_width() // 2, HEIGHT // 2 + 10),
+                (WIDTH // 2 - combo_line.get_width() // 2, 245),
+            )
+
+            counts = self.grade_counts
+
+            perfect = score_font.render(
+                f"PERFECT: {counts['PERFECT']}", True, (255, 220, 0)
+            )
+            great = score_font.render(
+                f"GREAT: {counts['GREAT']}", True, (100, 220, 100)
+            )
+            ok = score_font.render(
+                f"OK: {counts['OK']}", True, (180, 180, 255)
+            )
+            miss = score_font.render(
+                f"MISS: {counts['MISS']}", True, (220, 80, 80)
+            )
+
+            self.screen.blit(perfect, (35, 310))
+            self.screen.blit(great, (250, 310))
+            self.screen.blit(ok, (35, 350))
+            self.screen.blit(miss, (250, 350))
+
+            accuracy = score_font.render(
+                f"Accuracy: {self.get_accuracy():.2f}%",
+                True,
+                (220, 220, 220),
             )
             self.screen.blit(
-                restart, (WIDTH // 2 - restart.get_width() // 2, HEIGHT // 2 + 65)
+                accuracy,
+                (WIDTH // 2 - accuracy.get_width() // 2, 420),
             )
+
+            restart = self.font.render(
+                "Press R to Restart", True, (160, 160, 160)
+            )
+            self.screen.blit(
+                restart,
+                (WIDTH // 2 - restart.get_width() // 2, 500),
+            )
+
 
         pygame.display.flip()
 
