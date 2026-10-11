@@ -197,7 +197,6 @@ class GameEngine:
                     [grade, col, 40, lane_x, HIT_Y - 30]
                 )
         else:
-            self.record_grade("MISS")
             self.combo = 0
             self.feedback.append(
                 ["MISS", (220, 60, 60), 40, lane_x, HIT_Y - 30]
